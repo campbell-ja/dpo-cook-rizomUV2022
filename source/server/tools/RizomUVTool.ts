@@ -100,11 +100,35 @@ export default class RizomUVTool extends Tool<RizomUVTool, IRizomUVToolSettings>
 
         const content = [
             `ZomResetPrefs(none)`,
-            `ZomLoad({File={Path=${JSON.stringify(inputFilePath)}, ImportGroups=true, XYZ=true}, NormalizeUVW=true})`,
+                
+            `-- RizomUV2022 load file -- `,
+            `ZomLoad({File={Path=${JSON.stringify(inputFilePath)}, ImportGroups=true, XYZ=true}, NormalizeUVW=true, __Focus=true})`,
 
-            `-- auto-select seams using mosaic algorithm --`,
-            `ZomSelect({PrimType="Edge", Select=true, ResetBefore=true, WorkingSetPrimType="Island", ProtectMapName="Protect", FilterIslandVisible=true, Auto={QuasiDevelopable={Developability=${settings.cutSegmentationStrength}, IslandPolyNBMin=2, FitCones=false, Straighten=true}, HandleCutter=true, StretchLimiter=true, SkeletonUnoverlap={SegLevel=1, FromRoot=true, Smooth=2}, FlatteningMode=0, SQS=0.0357143, SQP=0.5, AQS=0.000178571, AQP=0.5}})`,
-            //`ZomSelect({PrimType="Edge", Select=true, ResetBefore=true, WorkingSetPrimType="Island", ProtectMapName="Protect", FilterIslandVisible=true, Auto={QuasiDevelopable={Developability=${options.cutSegmentationStrength}, IslandPolyNBMin=1, FitCones=false, Straighten=true}, HandleCutter=${options.cutHandles}}})`,
+            `-- RizomUV2022 Auto Select Edges --`,
+            `ZomSelect({PrimType="Edge", WorkingSet="Island", IslandGroupMode="Group", Select=true, ResetBefore=true, ProtectMapName="Protect", FilterIslandVisible=true, Auto={QuasiDevelopable={Developability=${settings.cutSegmentationStrength}, IslandPolyNBMin=1, FitCones=false, Straighten=true}, HandleCutter=true, QuadLoopCutter=true, StretchLimiter=true, Quality=0.25, SQS=0.0357143, SQP=0.5, AQS=0.000178571, AQP=0.5}})`,
+            
+            `-- RizomUV2022 Unwrap and Unfold Islands -- `,
+            `ZomCut({PrimType="Edge", WorkingSet="Island"})`,
+            `ZomUnfold({PrimType="Edge", PreIterations=5, Iterations=5, TriangleFlips=true, ProcessNonFlats=true, RoomSpace=0, MinAngle=1e-05, BorderIntersections=true, ProcessJustCut=true, ProcessAllIfNoneSelected=true, ProcessSelection=true, PinMapName="Pin", StopIfOutOFDomain=false, Mix=1})`,
+            
+            `-- RizomUV2022 Set Packing and Island Group Settings --`,
+            `ZomIslandGroups({Mode="SetGroupsProperties", WorkingSet="Visible", GroupPaths={ "RootGroup" }, Properties={Pack={Rotate={Mode=4}}}})`,
+            `ZomIslandGroups({Mode="SetGroupsProperties", WorkingSet="Visible", GroupPaths={ "RootGroup" }, Properties={Pack={MarginSize=0.00195312}}})`,
+            `ZomIslandGroups({Mode="SetGroupsProperties", WorkingSet="Visible", GroupPaths={ "RootGroup" }, Properties={Pack={PaddingSize=0.00390625}}})`,
+            `ZomIslandGroups({Mode="DistributeInTilesByBBox", MergingPolicy=8322})`,
+            `ZomIslandGroups({UseTileLocks=true, UseIslandLocks=true, Mode="DistributeInTilesEvenly", MergingPolicy=8322})`,
+
+            `-- RizomUV2022 Pack Islands --`,
+            `ZomPack({Resolution=512, RecursionDepth=1, Rotate={Min=0, Max=180, Step=30}, ProcessTileSelection=false, Translate=true, RootGroup="RootGroup", LayoutScalingMode=2, Scaling={Mode=2}, MarginSize=2/1024, MaxMutations=1, PaddingSize=4/1024})`,
+            `ZomIslandGroups({Mode="DistributeInTilesEvenly", WorkingSet="Visible&UnLocked", FreezeIslands=true, UseTileLocks=true, UseIslandLocks=true, GroupPaths={ "RootGroup" }})`,
+
+            `-- RizomUV2022 Repack filling full UV space --`,
+            `ZomPack({RootGroup="RootGroup", WorkingSet="Visible&UnLocked", ProcessTileSelection=false, RecursionDepth=1, LayoutScalingMode=3, Rotate={Mode=0}, Scaling={Mode=0}})`,
+            
+            
+            /*`-- Rizom2018 auto-select seams using mosaic algorithm --`,
+            `ZomSelect({PrimType="Edge", Select=true, ResetBefore=true, WorkingSetPrimType="Island", ProtectMapName="Protect", FilterIslandVisible=true, Auto={QuasiDevelopable={Developability=${settings.cutSegmentationStrength}, IslandPolyNBMin=2, FitCones=false, Straighten=true}, HandleCutter=true, StretchLimiter=true, FlatteningMode=0, SQS=0.0357143, SQP=0.5, AQS=0.000178571, AQP=0.5}})`,
+            `ZomSelect({PrimType="Edge", Select=true, ResetBefore=true, WorkingSetPrimType="Island", ProtectMapName="Protect", FilterIslandVisible=true, Auto={QuasiDevelopable={Developability=${options.cutSegmentationStrength}, IslandPolyNBMin=1, FitCones=false, Straighten=true}, HandleCutter=${options.cutHandles}}})`,
             `ZomCut({PrimType="Edge"})`,
 
             `-- unwrap --`,
@@ -114,7 +138,7 @@ export default class RizomUVTool extends Tool<RizomUVTool, IRizomUVToolSettings>
             `ZomIslandGroups({Mode="DistributeInTilesByBBox", MergingPolicy=8322})`,
             `ZomIslandGroups({Mode="DistributeInTilesEvenly", MergingPolicy=8322, UseTileLocks=true, UseIslandLocks=true})`,
             `ZomPack({ProcessTileSelection=false, RootGroup="RootGroup", RecursionDepth=1, MaxMutations=1, Resolution=500, MarginSize=2/1024, SpacingSize=4/1024, Scaling={Mode=2}, Rotate={Min=0, Max=180, Step=30}, Translate=true, LayoutScalingMode=2})`,
-
+            */
             `-- save mesh --`,
             saveOperations.join("\n"),
             `ZomQuit()`
